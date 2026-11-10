@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>Leylam</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #fff;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    #app {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      opacity: 0;
+      transition: opacity .3s ease;
+    }
+    #app.ready { opacity: 1; }
+
+    /* Loading screen */
+    #loader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: #555;
+      transition: opacity .3s ease;
+    }
+    #loader.hidden { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 4px solid #ddd;
+      border-top-color: #333;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Fullscreen toggle */
+    #fs-btn {
+      position: fixed;
+      right: 12px;
+      bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      z-index: 10;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, .65);
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    #fs-btn:hover { background: rgba(0, 0, 0, .85); }
+    #fs-btn[hidden] { display: none; }
+
+    #fallback { display: none; text-align: center; }
+    #fallback a { color: #0b57d0; }
+  </style>
+</head>
+<body>
+
+  <div id="loader" role="status" aria-live="polite">
+    <div class="spinner"></div>
+    <div>Loading Leylam…</div>
+    <div id="fallback">
+      Taking too long? <a id="direct-link" target="_blank" rel="noopener">Open directly</a>
+    </div>
+  </div>
+
+  <iframe
+    id="app"
+    title="Leylam"
+    allow="fullscreen; clipboard-write"
+    allowfullscreen
+    referrerpolicy="no-referrer"
+    sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals">
+  </iframe>
+
+  <button id="fs-btn" type="button" aria-label="Toggle fullscreen">⛶ Fullscreen</button>
+
+  <noscript>This app requires JavaScript to run.</noscript>
+
+  <script>
+    (function () {
+      const APP_URL = "https://script.google.com/macros/s/AKfycbwDVpiJ2QQgzGiFj6ievMN9FoaIRdk9h6f-BIdHk6hyL7eoxLNyKC5NJQCEkqnvkOTyMg/exec";
+
+      const frame    = document.getElementById("app");
+      const loader   = document.getElementById("loader");
+      const fsBtn    = document.getElementById("fs-btn");
+      const fallback = document.getElementById("fallback");
+      const direct   = document.getElementById("direct-link");
+
+      direct.href = APP_URL;
+
+      // Show a fallback link if loading takes too long
+      const slowTimer = setTimeout(() => { fallback.style.display = "block"; }, 8000);
+
+      frame.addEventListener("load", () => {
+        clearTimeout(slowTimer);
+        frame.classList.add("ready");
+        loader.classList.add("hidden");
+      });
+      frame.src = APP_URL;
+
+      // Fullscreen must be triggered by a user click
+      const canFullscreen = document.fullscreenEnabled || document.webkitFullscreenEnabled;
+      if (!canFullscreen) {
+        fsBtn.hidden = true; // e.g. iPhone Safari
+      }
+
+      fsBtn.addEventListener("click", async () => {
+        try {
+          if (document.fullscreenElement) {
+            await document.exitFullscreen();
+          } else {
+            await document.documentElement.requestFullscreen();
+          }
+        } catch (err) {
+          console.error(`Fullscreen error: ${err.message}`);
+        }
+      });
+
+      document.addEventListener("fullscreenchange", () => {
+        fsBtn.textContent = document.fullscreenElement ? "✕ Exit fullscreen" : "⛶ Fullscreen";
+      });
+    })();
+  </script>
+</body>
+</html>
